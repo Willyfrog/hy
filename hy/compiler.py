@@ -1241,6 +1241,7 @@ class HyASTCompiler(object):
 
         return ret
 
+
     @builds("kwapply")
     @checkargs(2)
     def compile_kwapply_expression(self, expr):
@@ -1255,6 +1256,47 @@ class HyASTCompiler(object):
 
         return kwargs + call
 
+
+    def _call_expression(self, call, start_line, start_column, starargs=None, kwargs=None):
+        '''
+        make the expression a call, adding starargs or kwargs to the call
+        '''
+        ret = Result()
+        
+        if starargs is not None:
+            ret += starargs
+            starargs = starargs.force_expr
+        if kwargs is not None:
+            ret += kwargs
+            kwargs = kwargs.force_expr
+            
+        ret += ast.Call(func=call.expr,
+                              args= [],
+                              keywords=[],
+                              starargs=starargs,
+                              kwargs=kwargs,
+                              lineno=start_line,
+                              col_offset=start_column)
+
+        return ret
+    
+    @builds("kwcall")
+    @checkargs(2)
+    def compile_kwcall_expression(self, expr):
+        expr.pop(0)  # kwcall
+        call = self.compile(expr.pop(0))
+        argish = self.compile(expr.pop(0))
+        return self._call_expression(call, expr.start_line, expr.start_column, kwargs=argish)
+
+    @builds("call")
+    @checkargs(min=2, max=3)
+    def compile_call_expression(self, expr):
+        expr.pop(0)  # call
+        call = self.compile(expr.pop(0))
+        star = self.compile(expr.pop(0))
+        kwar = self.compile(expr.pop(0)) if expr != [] else None
+        return self._call_expression(call, expr.start_line, expr.start_column,  star, kwar)
+    
     @builds("not")
     @builds("~")
     @checkargs(1)
