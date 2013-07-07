@@ -1241,6 +1241,45 @@ class HyASTCompiler(object):
 
         return ret
 
+    def _compile_apply(self, call, args=None, kwargs=None):
+        """
+        partial application to a call of args and kwargs
+        """
+        if type(call.expr) != ast.Call:
+            raise HyTypeError(expr, "Applying to a non-call")
+
+        ret = call
+        
+        if args is not None:
+            call.expr.starargs = args.force_expr
+            ret =args + ret
+
+        if kwargs is not None:
+            print "old_kwargs: %s" % call.expr.kwargs
+            if call.expr.kwargs is None:
+                call.expr.kwargs = kwargs.force_expr
+            else:
+                fkwargs = kwargs.force_expr
+                call.expr.kwargs = ast.Call(func=ast.Name(id='dict', ctx=ast.Load()),
+                                                               args=[call.expr.kwargs],
+                                                               keywords=[],
+                                                               kwargs=fkwargs,
+                                                               lineno=fkwargs.lineno,
+                                                               col_offset=fkwargs.col_offset)
+            ret = kwargs + ret
+        
+        return ret
+    
+    @builds("apply")
+    @checkargs(min=2, max=3)
+    def compile_apply_expression(self, expr):
+        expr.pop(0)  # kwapply
+        call = self.compile(expr.pop(0))
+        args = self.compile(expr.pop(0))
+        kwargs = self.compile(expr.pop(0)) if expr else None
+
+        return self._compile_apply(call, args, kwargs)
+
     @builds("kwapply")
     @checkargs(2)
     def compile_kwapply_expression(self, expr):
@@ -1248,13 +1287,8 @@ class HyASTCompiler(object):
         call = self.compile(expr.pop(0))
         kwargs = self.compile(expr.pop(0))
 
-        if type(call.expr) != ast.Call:
-            raise HyTypeError(expr, "kwapplying a non-call")
-
-        call.expr.kwargs = kwargs.force_expr
-
-        return kwargs + call
-
+        return self._compile_apply(call, kwargs=kwargs)
+    
     @builds("not")
     @builds("~")
     @checkargs(1)
