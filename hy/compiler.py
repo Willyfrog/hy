@@ -1241,7 +1241,7 @@ class HyASTCompiler(object):
 
         return ret
 
-    def _compile_apply(self, call, args=None, kwargs=None):
+    def _compile_apply(self, call, lineno, col_offset, stargs=None, kwargs=None):
         """
         partial application to a call of args and kwargs
         """
@@ -1250,22 +1250,32 @@ class HyASTCompiler(object):
 
         ret = call
         
-        if args is not None:
-            call.expr.starargs = args.force_expr
-            ret =args + ret
+        if stargs is not None:
+            if call.expr.starargs is None:
+                call.expr.starargs = stargs.force_expr
+            else:
+                #append the list
+                call.expr.starargs = ast.BinOp(left=call.expr.starargs,
+                                               op=ast.Add(),
+                                               right=stargs.force_expr,
+                                               lineno=lineno,
+                                               col_offset=col_offset)
+            ret =stargs + ret
 
         if kwargs is not None:
-            print "old_kwargs: %s" % call.expr.kwargs
             if call.expr.kwargs is None:
                 call.expr.kwargs = kwargs.force_expr
             else:
-                fkwargs = kwargs.force_expr
-                call.expr.kwargs = ast.Call(func=ast.Name(id='dict', ctx=ast.Load()),
-                                                               args=[call.expr.kwargs],
-                                                               keywords=[],
-                                                               kwargs=fkwargs,
-                                                               lineno=fkwargs.lineno,
-                                                               col_offset=fkwargs.col_offset)
+                #build a dict with the original and the new one
+                call.expr.kwargs = ast.Call(func=ast.Name(id='dict',
+                                                          ctx=ast.Load(),
+                                                          lineno=lineno,
+                                                          col_offset=col_offset),
+                                            args=[call.expr.kwargs],
+                                            keywords=[],
+                                            kwargs=kwargs.force_expr,
+                                            lineno=lineno,
+                                            col_offset=col_offset)
             ret = kwargs + ret
         
         return ret
@@ -1273,12 +1283,11 @@ class HyASTCompiler(object):
     @builds("apply")
     @checkargs(min=2, max=3)
     def compile_apply_expression(self, expr):
-        expr.pop(0)  # kwapply
+        expr.pop(0)  # apply
         call = self.compile(expr.pop(0))
         args = self.compile(expr.pop(0))
         kwargs = self.compile(expr.pop(0)) if expr else None
-
-        return self._compile_apply(call, args, kwargs)
+        return self._compile_apply(call, expr.start_line, expr.start_column, args, kwargs)
 
     @builds("kwapply")
     @checkargs(2)
@@ -1286,8 +1295,7 @@ class HyASTCompiler(object):
         expr.pop(0)  # kwapply
         call = self.compile(expr.pop(0))
         kwargs = self.compile(expr.pop(0))
-
-        return self._compile_apply(call, kwargs=kwargs)
+        return self._compile_apply(call, expr.start_line, expr.start_column, kwargs=kwargs)
     
     @builds("not")
     @builds("~")

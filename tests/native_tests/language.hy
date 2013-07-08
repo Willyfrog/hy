@@ -1,4 +1,4 @@
-(import [tests.resources [kwtest function-with-a-dash]]
+(import [tests.resources [kwtest startest both-args-test] function-with-a-dash]
         [os.path [exists isdir isfile]]
         [sys :as systest])
 (import sys)
@@ -154,6 +154,25 @@
   (assert (= (kwapply (kwtest) mydict) mydict))
   (assert (= (kwapply (kwtest) ((fn [] {"one" "two"}))) {"one" "two"})))
 
+(defn test-starargs []
+  "NATIVE: test starargs things."
+  (assert (= (apply (startest) ["one" "two"]) ["one" "two"]))
+  (setv mylist ["one" "three"])
+  (assert (= (apply (startest) mylist) mylist))
+  (assert (= (apply (startest) ((fn [] ["one" "two"]))) ["one" "two"])))
+
+(defn test-multiple-apply []
+  (def e {"b" 3})
+  (def d {"a" 3})
+  (defn sum-em [a b] (+ a b))
+  (assert (= (kwapply (kwapply (sum-em) d) e) 6))
+  (assert (= (kwapply (kwapply (sum-em) {"b" 3}) {"a" 2}) 5))
+  (def g [1])
+  (def h [2])
+  (assert (= (apply (apply (sum-em) g) h) 3))
+  (assert (= (apply (sum-em) g e) 3))
+  (assert (= (apply (apply (sum-em) [1]) h) 3))
+  (assert (= (apply (apply (sum-em) [1]) [2]) 3)))
 
 (defn test-dotted []
   "NATIVE: test dotted invocation"
