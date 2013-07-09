@@ -170,7 +170,7 @@
   (def g [1])
   (def h [2])
   (assert (= (apply (apply (sum-em) g) h) 3))
-  (assert (= (apply (sum-em) g e) 3))
+  (assert (= (apply (sum-em) g e) 4))
   (assert (= (apply (apply (sum-em) [1]) h) 3))
   (assert (= (apply (apply (sum-em) [1]) [2]) 3)))
 
