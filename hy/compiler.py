@@ -432,6 +432,26 @@ class HyASTCompiler(object):
     def _compile_branch(self, exprs):
         return _branch(self.compile(expr) for expr in exprs)
 
+    def _get_karg(self, karg):
+        """
+        get the original value of a keyword or throw an exception if it's not one
+        """
+        print "hy"
+        if isinstance(karg, HyKeyword):
+            return HyString(karg.__key_value__ + "a").replace(karg)
+        raise HyCompileError(TypeError, "{key} is not a keyword".format(key=karg))
+    
+    def _parse_keyword_list(self, exprs):
+        kwargs = {}
+        ret = Result()
+        print "humm: %" % exprs
+        for (karg, val) in zip(exprs[::2], exprs[1::2]):
+            print "karg: %" % karg
+            rval, rret = self._compile_collect(val)
+            kwargs[self._get_karg(karg)] = rval
+            ret +=rret
+        return (kwargs, ret)
+    
     def _parse_lambda_list(self, exprs):
         """ Return FunctionDef parameter values from lambda list."""
         ret = Result()
@@ -1437,6 +1457,7 @@ class HyASTCompiler(object):
             return self.compile_list(expression)
         fn = expression[0]
         func = None
+        ofn = None
         if isinstance(fn, HyKeyword):
             return self._compile_keyword_call(expression)
 
@@ -1448,7 +1469,7 @@ class HyASTCompiler(object):
             if fn in _stdlib:
                 self.imports[_stdlib[fn]].add(fn)
 
-            if fn.startswith("."):
+            if fn.startswith((".","#")):
                 # (.split "test test") -> "test test".split()
 
                 # Get the attribute name
@@ -1468,13 +1489,21 @@ class HyASTCompiler(object):
 
         if not func:
             func = self.compile(fn)
-        args, ret = self._compile_collect(expression[1:])
+
+        args = []
+        kwargs = None
+        if ofn is None or not ofn.startswith('#'):
+            print "ohy!"
+            args, ret = self._compile_collect(expression[1:])
+        else:
+            print "ohy2!"
+            kwargs, ret = self._parse_keyword_list(expression[1:])
 
         ret += ast.Call(func=func.expr,
                         args=args,
                         keywords=[],
                         starargs=None,
-                        kwargs=None,
+                        kwargs=kwargs,
                         lineno=expression.start_line,
                         col_offset=expression.start_column)
 

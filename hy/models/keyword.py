@@ -30,4 +30,5 @@ class HyKeyword(HyObject, str_type):
 
     def __new__(cls, value):
         obj = str_type.__new__(cls, "\uFDD0" + value)
+        obj.__key_value__ = value
         return obj

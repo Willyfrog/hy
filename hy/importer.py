@@ -39,10 +39,14 @@ else:
     long_type = long  # NOQA
 
 
-def ast_compile(ast, filename, mode):
+def ast_compile(asty, filename, mode):
     """Compile AST.
     Like Python's compile, but with some special flags."""
-    return compile(ast, filename, mode, __future__.CO_FUTURE_DIVISION)
+    try:
+        return compile(asty, filename, mode, __future__.CO_FUTURE_DIVISION)
+    except TypeError, e:
+        print (ast.dump(asty, True, True))
+        raise e
 
 
 def import_buffer_to_hst(buf):
