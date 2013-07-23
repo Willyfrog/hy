@@ -40,6 +40,7 @@
          (catch [StopIteration]))
     citer))
 
+<<<<<<< HEAD
 (defn even? [n]
   "Return true if n is an even number"
   (_numeric-check n)
@@ -158,3 +159,5 @@
                 "instance?" "iterable?" "iterate" "iterator?" "neg?"
                 "none?" "nth" "numeric?" "odd?" "pos?" "remove" "repeat"
                 "repeatedly" "take" "take_nth" "take_while"])
+
+
