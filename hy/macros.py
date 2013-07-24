@@ -31,8 +31,10 @@ from hy.util import str_type
 from collections import defaultdict
 
 
+#defn something and it breaks
 MACROS = [
     "hy.core.bootstrap",
+    "hy.core.macros",
 ]
 
 _hy_macros = defaultdict(dict)
