@@ -24,6 +24,7 @@ from hy.models.expression import HyExpression
 from hy.models.integer import HyInteger
 from hy.models.symbol import HySymbol
 from hy.models.list import HyList
+from hy.models.dict import HyDict
 
 
 @macro("defn")
@@ -154,3 +155,11 @@ def unless_macro(test, *body):
         HySymbol('None'),
         HyExpression([HySymbol("do")] + list(body)),
     ])
+
+## @macro("kwapply")
+## def kwapply_macro(fun, *kwargs):
+##     if len(fun)==1:
+##         fun = HySymbol(fun)
+##     else:
+##         fun = HyExpression(fun[:])
+##     return HyExpression([HySymbol('apply'), fun, HyList(), HyDict(*kwargs)])
