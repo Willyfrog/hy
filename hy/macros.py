@@ -31,10 +31,6 @@ from hy.util import str_type
 from collections import defaultdict
 
 
-CORE_MACROS = [
-    "hy.core.bootstrap",
-]
-
 EXTRA_MACROS = [
     "hy.core.macros",
 ]
@@ -87,14 +83,9 @@ def process(tree, module_name):
 
 
 def load_macros(module_name):
-    for module in CORE_MACROS:
-        __import__(module)
-
-    if module_name.startswith("hy.core"):
-        return
-
     for module in EXTRA_MACROS:
-        __import__(module)
+        if module != module_name:
+            __import__(module)
 
 
 def macroexpand(tree, module_name):
