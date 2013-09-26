@@ -1493,6 +1493,16 @@ class HyASTCompiler(object):
         expression.insert(0, HySymbol("get"))
         return self.compile(expression)
 
+    @checkargs(2)
+    def _compile_get_attribute(self, expression):
+        obj = self.compile(expression[1])
+        attr = expression[0]
+        return ast.Attribute(lineno=attr.start_line,
+                             col_offset=attr.start_column,
+                             value=obj.force_expr(),
+                             attr=str(attr[1:]),
+                             ctx=ast.Load())
+    
     @builds(HyExpression)
     def compile_expression(self, expression):
         if expression == []:
@@ -1501,6 +1511,8 @@ class HyASTCompiler(object):
         func = None
         if isinstance(fn, HyKeyword):
             return self._compile_keyword_call(expression)
+        if isinstance(fn, HyArgName):
+            return self._compile_get_attribute(expression)
 
         if isinstance(fn, HyString):
             ret = self.compile_atom(fn, expression)
