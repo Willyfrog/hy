@@ -33,7 +33,6 @@ from hy.models.lambdalist import HyLambdaListKeyword
 from hy.models.list import HyList
 from hy.models.string import HyString
 from hy.models.symbol import HySymbol
-from hy.models.argname import HyArgName
 
 from .lexer import lexer
 from .exceptions import LexException, PrematureEndOfInput
@@ -227,14 +226,6 @@ def t_identifier(p):
     if obj in table:
         return HySymbol(table[obj])
 
-    if obj.startswith(":"):
-        return HyKeyword(obj)
-
-    if obj.startswith("%"):
-        if "-" in obj and obj != "-":
-            obj = obj.replace("-", "_")
-        return HyArgName(obj)
-
     if obj.startswith("&"):
         return HyLambdaListKeyword(obj)
 
@@ -243,6 +234,9 @@ def t_identifier(p):
 
     if "-" in obj and obj != "-":
         obj = obj.replace("-", "_")
+
+    if obj.startswith(":"):
+        return HyKeyword(obj)
 
     return HySymbol(obj)
 
