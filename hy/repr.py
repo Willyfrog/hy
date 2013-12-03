@@ -29,3 +29,5 @@ def hyrepr(x):
     else:
         r = builtins.repr(_wrap_value(x))
     return r
+
+EXPORTS = ["hyrepr"]
